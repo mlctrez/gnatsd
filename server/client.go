@@ -465,14 +465,15 @@ func (c *client) sendInfo(info []byte) {
 
 func (c *client) sendErr(err string) {
 	c.mu.Lock()
+	c.traceOutOp("-ERR", []byte(err))
 	c.sendProto([]byte(fmt.Sprintf("-ERR '%s'\r\n", err)), true)
 	c.mu.Unlock()
 }
 
 func (c *client) sendOK() {
 	c.mu.Lock()
-	c.sendProto([]byte("+OK\r\n"), false)
-	c.pcd[c] = needFlush
+	c.traceOutOp("OK", nil)
+	c.sendProto([]byte("+OK\r\n"), true)
 	c.mu.Unlock()
 }
 
