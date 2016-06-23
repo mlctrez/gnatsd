@@ -13,6 +13,23 @@ import (
 	"time"
 )
 
+// Type of client connection.
+const (
+	// CLIENT is an end user.
+	CLIENT = iota
+	// ROUTER is another router in the cluster.
+	ROUTER
+)
+
+const (
+	// Original Client protocol from 2009.
+	// http://nats.io/documentation/internals/nats-protocol/
+	ClientProtoZero = iota
+	// This signals a client can receive more then the original INFO block.
+	// This can be used to update clients on other cluster members, etc.
+	ClientProtoInfo
+)
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
@@ -28,14 +45,6 @@ const (
 	startBufSize = 512 // For INFO/CONNECT block
 	minBufSize   = 128
 	maxBufSize   = 65536
-)
-
-// Type of client
-const (
-	// CLIENT is an end user.
-	CLIENT = iota
-	// ROUTER is another router in the cluster.
-	ROUTER
 )
 
 type client struct {
@@ -118,6 +127,7 @@ type clientOpts struct {
 	Name          string `json:"name"`
 	Lang          string `json:"lang"`
 	Version       string `json:"version"`
+	Protocol      int    `json:"protocol"`
 }
 
 var defaultOpts = clientOpts{Verbose: true, Pedantic: true}
@@ -383,6 +393,12 @@ func (c *client) processConnect(arg []byte) error {
 			c.authViolation()
 			return ErrAuthorization
 		}
+	}
+
+	// Check client protocol request if it exists.
+	if c.typ == CLIENT &&
+		(c.opts.Protocol < ClientProtoZero || c.opts.Protocol > ClientProtoInfo) {
+		return ErrBadClientProtocol
 	}
 
 	// Grab connection name of remote route.
