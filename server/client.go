@@ -473,7 +473,9 @@ func (c *client) sendErr(err string) {
 func (c *client) sendOK() {
 	c.mu.Lock()
 	c.traceOutOp("OK", nil)
-	c.sendProto([]byte("+OK\r\n"), true)
+	// Can not autoflush this one, needs to be async.
+	c.sendProto([]byte("+OK\r\n"), false)
+	c.pcd[c] = needFlush
 	c.mu.Unlock()
 }
 
