@@ -11,7 +11,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"runtime"
 	"strconv"
 	"sync"
@@ -179,23 +178,6 @@ func PrintAndDie(msg string) {
 func PrintServerAndExit() {
 	fmt.Printf("nats-server version %s\n", VERSION)
 	os.Exit(0)
-}
-
-// Signal Handling
-func (s *Server) handleSignals() {
-	if s.opts.NoSigs {
-		return
-	}
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for sig := range c {
-			Debugf("Trapped Signal; %v", sig)
-			// FIXME, trip running?
-			Noticef("Server Exiting..")
-			os.Exit(0)
-		}
-	}()
 }
 
 // Protected check on running state

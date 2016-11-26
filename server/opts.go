@@ -130,12 +130,7 @@ func ProcessConfigFile(configFile string) (*Options, error) {
 		return opts, nil
 	}
 
-	data, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, fmt.Errorf("error opening config file: %v", err)
-	}
-
-	m, err := conf.Parse(string(data))
+	m, err := conf.ParseFile(configFile)
 	if err != nil {
 		return nil, err
 	}
@@ -216,6 +211,10 @@ func ProcessConfigFile(configFile string) (*Options, error) {
 			opts.MaxPending = int(v.(int64))
 		case "max_connections", "max_conn":
 			opts.MaxConn = int(v.(int64))
+		case "ping_interval":
+			opts.PingInterval = time.Duration(int(v.(int64))) * time.Second
+		case "ping_max":
+			opts.MaxPingsOut = int(v.(int64))
 		case "tls":
 			tlsm := v.(map[string]interface{})
 			tc, err := parseTLS(tlsm)
